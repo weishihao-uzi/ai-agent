@@ -9,6 +9,7 @@ __pycache__/
 .env
 venv/
 .venv/
+.venv-rag*/
 
 # IDE
 .idea/
@@ -25,3 +26,9 @@ docker-data/
 
 # Logs
 *.log
+
+# Generated local evaluation artifacts
+eval/live_*.json
+eval/*baseline*.json
+eval/rag_pgvector*.json
+.venv-rag*/

@@ -1,0 +1,22 @@
+[
+  {"case_id": "rag_private_knowledge", "query": "RAG 如何利用私有知识并降低回答幻觉？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [0, 15], "filters": {"position_tag": "ai_application"}},
+  {"case_id": "rag_ingest_pipeline", "query": "文档上传、切分、Embedding、向量库到 TopK 上下文生成的完整流程是什么？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [1], "filters": {"position_tag": "ai_application", "difficulty": "medium"}},
+  {"case_id": "rag_chunk_overlap", "query": "chunk size 和 overlap 过大过小会怎样，应该如何调？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [2], "filters": {"position_tag": "ai_application"}},
+  {"case_id": "rag_embedding_dimension", "query": "Embedding 为什么要把文本变成向量，数据库 vector 维度为什么必须一致？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [3], "filters": {"position_tag": "ai_application"}},
+  {"case_id": "rag_retrieval_debug", "query": "RAG 召回相关性低时，如何排查 query、切块、阈值、TopK 和 rerank？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [5], "filters": {"position_tag": "ai_application", "difficulty": "hard"}},
+  {"case_id": "rag_agent_boundary", "query": "Agent 和 RAG 在系统中如何分工，谁负责流程决策和工具编排？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [7], "filters": {"position_tag": "ai_application", "difficulty": "hard"}},
+  {"case_id": "rag_interview_architecture", "query": "AI 面试系统如何融合简历解析、岗位匹配 Agent、题库 RAG、评分和报告？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [8, 18], "filters": {"position_tag": "ai_application"}},
+  {"case_id": "rag_metadata", "query": "知识库检索为什么要保存 metadata，岗位、标题等元数据有什么用？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [11], "filters": {"position_tag": "ai_application"}},
+  {"case_id": "rag_hybrid_search", "query": "什么时候需要把关键词检索和向量检索结合起来？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [12], "filters": {"position_tag": "ai_application", "difficulty": "hard"}},
+  {"case_id": "backend_fastapi", "query": "为什么 FastAPI 适合构建异步 Python 后端服务？", "corpus": "python_backend_questions_20.json", "relevant_indexes": [6], "filters": {"position_tag": "python_backend"}},
+  {"case_id": "backend_cache_failure", "query": "缓存穿透、击穿、雪崩分别是什么，后端如何处理？", "corpus": "python_backend_questions_20.json", "relevant_indexes": [10], "filters": {"position_tag": "python_backend", "difficulty": "hard"}},
+  {"case_id": "backend_ai_latency", "query": "后端调用第三方 AI API 很慢时，如何优化体验和稳定性？", "corpus": "python_backend_questions_20.json", "relevant_indexes": [16], "filters": {"position_tag": "python_backend"}},
+  {"case_id": "rag_similarity_metrics", "query": "cosine similarity、L2 distance 和 inner product 分别衡量什么，文本检索通常选哪个？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [4], "filters": {"position_tag": "ai_application"}},
+  {"case_id": "rag_json_contract", "query": "大模型返回 JSON 不稳定时，如何约束格式并解析异常？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [14], "filters": {"position_tag": "ai_application", "difficulty": "medium"}},
+  {"case_id": "rag_multitenant_isolation", "query": "企业多租户知识库 RAG 如何保证不同租户的数据隔离？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [16], "filters": {"position_tag": "ai_application", "difficulty": "hard"}},
+  {"case_id": "rag_prompt_injection", "query": "RAG 场景中的 Prompt 注入是什么，应该如何防护？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [17], "filters": {"position_tag": "ai_application", "difficulty": "medium"}},
+  {"case_id": "rag_cost_latency", "query": "调用大模型 API 时怎样减少 Token 成本并降低响应延迟？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [19], "filters": {"position_tag": "ai_application", "difficulty": "medium"}},
+  {"case_id": "rag_async_embedding", "query": "为什么题库向量化适合放到 Celery 异步任务中处理？", "corpus": "python_ai_application_questions_20.json", "relevant_indexes": [13], "filters": {"position_tag": "ai_application", "difficulty": "medium"}},
+  {"case_id": "backend_gil", "query": "Python GIL 对多线程有什么影响，为什么线程不能实现真正并行？", "corpus": "python_backend_questions_20.json", "relevant_indexes": [1], "filters": {"position_tag": "python_backend", "difficulty": "medium"}},
+  {"case_id": "backend_asyncio_loop", "query": "Python asyncio 的事件循环如何工作，async 和 await 是什么关系？", "corpus": "python_backend_questions_20.json", "relevant_indexes": [5], "filters": {"position_tag": "python_backend", "difficulty": "hard"}}
+]

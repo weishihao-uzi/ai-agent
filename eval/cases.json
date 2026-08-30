@@ -1,0 +1,149 @@
+[
+  {
+    "case_id": "rag_question_correct",
+    "question": "AI 面试项目中，为什么题库 RAG 比完全让大模型自由生成题目更可靠？",
+    "reference_answer": "题库 RAG 让题目来自经过维护的题库，包含参考答案、关键点、岗位标签和难度，出题更稳定，也便于评分。完全自由生成可能出现题目偏离岗位、难度不稳定、参考答案缺失或质量不可控。召回题库后再结合简历改写，可以兼顾稳定性和个性化。",
+    "key_points": ["题库可维护", "参考答案和关键点", "岗位和难度稳定", "便于评分", "结合简历个性化改写"],
+    "candidate_answer": "题目先从经过维护的题库中召回，题库里有参考答案、采分点、岗位标签和难度，所以题目更稳定，也便于评分。相比完全自由生成，它不容易偏离岗位或出现难度不稳定、没有参考答案的问题。召回后还可以结合候选人简历做个性化改写。",
+    "expected": {"score_range": [9, 10], "veto": false},
+    "rubric": {
+      "dimensions": [
+        {"id": "correctness", "name": "技术正确性", "max_points": 4, "checks": [{"id": "maintained_bank", "patterns": ["经过维护的题库", "可维护的题库", "题库中召回"]}]},
+        {"id": "completeness", "name": "关键点完整性", "max_points": 3, "checks": [{"id": "reference_points", "patterns": ["参考答案、采分点", "参考答案和采分点", "参考答案", "采分点"]}, {"id": "position_difficulty", "patterns": ["岗位标签和难度", "岗位和难度"]}, {"id": "scoring", "patterns": ["便于评分", "方便评分"]}]},
+        {"id": "reasoning", "name": "对比与推理", "max_points": 2, "checks": [{"id": "free_generation_risk", "patterns": ["自由生成", "偏离岗位", "难度不稳定", "没有参考答案"]}]},
+        {"id": "personalization", "name": "个性化关联", "max_points": 1, "checks": [{"id": "resume", "patterns": ["结合候选人简历", "结合简历", "个性化改写"]}]}
+      ],
+      "veto_patterns": ["准确率达到了95%", "比自由生成的成功率高20%", "线上已经验证过"]
+    }
+  },
+  {
+    "case_id": "rag_question_partial",
+    "question": "AI 面试项目中，为什么题库 RAG 比完全让大模型自由生成题目更可靠？",
+    "reference_answer": "题库 RAG 让题目来自经过维护的题库，包含参考答案、关键点、岗位标签和难度，出题更稳定，也便于评分。完全自由生成可能出现题目偏离岗位、难度不稳定、参考答案缺失或质量不可控。召回题库后再结合简历改写，可以兼顾稳定性和个性化。",
+    "key_points": ["题库可维护", "参考答案和关键点", "岗位和难度稳定", "便于评分", "结合简历个性化改写"],
+    "candidate_answer": "题库 RAG 会先从题库检索题目，所以比完全让大模型自由生成更稳定，也更容易和岗位匹配。",
+    "expected": {"score_range": [4, 7], "veto": false},
+    "rubric": {
+      "dimensions": [
+        {"id": "correctness", "name": "技术正确性", "max_points": 4, "checks": [{"id": "retrieval", "patterns": ["从题库检索", "题库检索", "题库召回"]}]},
+        {"id": "completeness", "name": "关键点完整性", "max_points": 3, "checks": [{"id": "reference_points", "patterns": ["参考答案", "采分点"]}, {"id": "position", "patterns": ["岗位匹配", "岗位标签"]}, {"id": "scoring", "patterns": ["评分"]}]},
+        {"id": "reasoning", "name": "对比与推理", "max_points": 2, "checks": [{"id": "stability", "patterns": ["更稳定", "难度稳定"]}]},
+        {"id": "personalization", "name": "个性化关联", "max_points": 1, "checks": [{"id": "resume", "patterns": ["结合简历", "个性化"]}]}
+      ],
+      "veto_patterns": []
+    }
+  },
+  {
+    "case_id": "rag_question_irrelevant",
+    "question": "AI 面试项目中，为什么题库 RAG 比完全让大模型自由生成题目更可靠？",
+    "reference_answer": "题库 RAG 让题目来自经过维护的题库，包含参考答案、关键点、岗位标签和难度，出题更稳定，也便于评分。",
+    "key_points": ["题库可维护", "参考答案和关键点", "岗位和难度稳定", "便于评分"],
+    "candidate_answer": "RAG 是把文档切成 chunk，再调用 Embedding 模型转成向量，最后保存到向量数据库中。",
+    "expected": {"score_range": [0, 2], "veto": false},
+    "rubric": {
+      "dimensions": [
+        {"id": "correctness", "name": "问题针对性", "max_points": 4, "checks": [{"id": "question_bank", "patterns": ["题库", "题库 RAG"]}]},
+        {"id": "completeness", "name": "关键点完整性", "max_points": 3, "checks": [{"id": "reference", "patterns": ["参考答案", "采分点"]}, {"id": "position", "patterns": ["岗位"]}, {"id": "scoring", "patterns": ["评分"]}]},
+        {"id": "reasoning", "name": "因果解释", "max_points": 2, "checks": [{"id": "reliability", "patterns": ["可靠", "稳定"]}]},
+        {"id": "relevance", "name": "回答相关性", "max_points": 1, "checks": [{"id": "contrast", "patterns": ["自由生成"]}]}
+      ],
+      "veto_patterns": []
+    }
+  },
+  {
+    "case_id": "rag_question_hallucination",
+    "question": "AI 面试项目中，为什么题库 RAG 比完全让大模型自由生成题目更可靠？",
+    "reference_answer": "题库 RAG 让题目来自经过维护的题库，包含参考答案、关键点、岗位标签和难度，出题更稳定，也便于评分。",
+    "key_points": ["题库可维护", "参考答案和关键点", "岗位和难度稳定", "便于评分"],
+    "candidate_answer": "题库 RAG 确实更可靠，因为项目线上已经验证过，准确率达到了 95%，并且比自由生成的成功率高 20%。",
+    "expected": {"score_range": [0, 0], "veto": true},
+    "rubric": {
+      "dimensions": [
+        {"id": "correctness", "name": "事实正确性", "max_points": 4, "checks": [{"id": "question_bank", "patterns": ["题库"]}]},
+        {"id": "completeness", "name": "关键点完整性", "max_points": 3, "checks": [{"id": "reference", "patterns": ["参考答案"]}, {"id": "position", "patterns": ["岗位"]}, {"id": "scoring", "patterns": ["评分"]}]},
+        {"id": "reasoning", "name": "因果解释", "max_points": 2, "checks": [{"id": "reliable", "patterns": ["更可靠"]}]},
+        {"id": "relevance", "name": "问题相关性", "max_points": 1, "checks": [{"id": "contrast", "patterns": ["自由生成"]}]}
+      ],
+      "veto_patterns": ["准确率达到了95%", "比自由生成的成功率高20%", "线上已经验证过"]
+    }
+  },
+  {
+    "case_id": "scoring_grounded_correct",
+    "question": "为什么回答评分要把 reference_answer 和 key_points 传给模型？",
+    "reference_answer": "参考答案和关键采分点提供统一评分依据，模型可以检查候选人是否覆盖核心知识，减少凭语言流畅度打分的偏差，并让反馈更可解释。",
+    "key_points": ["统一评分依据", "检查核心知识覆盖", "减少主观或流畅度偏差", "反馈更可解释"],
+    "candidate_answer": "reference_answer 和 key_points 是统一的评分依据，模型可以按采分点检查候选人是否覆盖核心知识，而不是只看语言是否流畅。这样能减少主观打分，让反馈更有依据、更可解释。",
+    "expected": {"score_range": [9, 10], "veto": false},
+    "rubric": {
+      "dimensions": [
+        {"id": "correctness", "name": "评分机制正确性", "max_points": 4, "checks": [{"id": "grounding", "patterns": ["评分依据", "统一的评分依据"]}]},
+        {"id": "completeness", "name": "核心效果覆盖", "max_points": 4, "checks": [{"id": "coverage", "patterns": ["覆盖核心知识", "按采分点检查"]}, {"id": "bias", "patterns": ["减少主观", "不只看语言", "语言是否流畅"]}, {"id": "explainable", "patterns": ["可解释", "有依据"]}]},
+        {"id": "relevance", "name": "问题相关性", "max_points": 2, "checks": [{"id": "fields", "patterns": ["reference_answer", "key_points"]}]}
+      ],
+      "veto_patterns": ["评分准确率达到99%", "已经证明所有回答都正确"]
+    }
+  },
+  {
+    "case_id": "scoring_grounded_partial",
+    "question": "为什么回答评分要把 reference_answer 和 key_points 传给模型？",
+    "reference_answer": "参考答案和关键采分点提供统一评分依据，模型可以检查候选人是否覆盖核心知识，减少凭语言流畅度打分的偏差，并让反馈更可解释。",
+    "key_points": ["统一评分依据", "检查核心知识覆盖", "减少主观或流畅度偏差", "反馈更可解释"],
+    "candidate_answer": "把参考答案传给模型，可以让评分更稳定，也更有依据。",
+    "expected": {"score_range": [2, 5], "veto": false},
+    "rubric": {
+      "dimensions": [
+        {"id": "correctness", "name": "评分机制正确性", "max_points": 4, "checks": [{"id": "grounding", "patterns": ["评分更稳定", "评分依据"]}]},
+        {"id": "completeness", "name": "核心效果覆盖", "max_points": 4, "checks": [{"id": "coverage", "patterns": ["覆盖核心知识", "采分点"]}, {"id": "bias", "patterns": ["减少主观", "语言流畅"]}, {"id": "explainable", "patterns": ["可解释"]}]},
+        {"id": "relevance", "name": "问题相关性", "max_points": 2, "checks": [{"id": "fields", "patterns": ["reference_answer", "key_points"]}]}
+      ],
+      "veto_patterns": []
+    }
+  },
+  {
+    "case_id": "scoring_hallucination",
+    "question": "为什么回答评分要把 reference_answer 和 key_points 传给模型？",
+    "reference_answer": "参考答案和关键采分点提供统一评分依据。",
+    "key_points": ["统一评分依据"],
+    "candidate_answer": "因为这个项目线上评分准确率达到 99%，人工复核已经证明所有回答都正确。",
+    "expected": {"score_range": [0, 0], "veto": true},
+    "rubric": {
+      "dimensions": [
+        {"id": "correctness", "name": "事实正确性", "max_points": 8, "checks": [{"id": "grounding", "patterns": ["评分依据"]}]},
+        {"id": "relevance", "name": "问题相关性", "max_points": 2, "checks": [{"id": "reference", "patterns": ["参考答案", "采分点"]}]}
+      ],
+      "veto_patterns": ["评分准确率达到99%", "所有回答都正确"]
+    }
+  },
+  {
+    "case_id": "position_agent_correct",
+    "question": "岗位匹配 Agent 相比让用户手动选择岗位，多解决了什么问题？",
+    "reference_answer": "岗位匹配 Agent 读取结构化简历，构建候选人画像，再与岗位模板匹配，输出推荐岗位、匹配理由、能力差距和学习建议，把简历解析和专项面试连接起来。",
+    "key_points": ["读取结构化简历", "匹配岗位模板", "推荐理由和能力差距", "连接简历与面试"],
+    "candidate_answer": "它会读取解析后的结构化简历，构建候选人画像，再和岗位模板做匹配，不只是让用户自己选岗位。Agent 会输出推荐岗位、匹配理由、能力差距和学习建议，从而把简历解析和后续专项面试连接起来。",
+    "expected": {"score_range": [9, 10], "veto": false},
+    "rubric": {
+      "dimensions": [
+        {"id": "correctness", "name": "流程正确性", "max_points": 4, "checks": [{"id": "profile", "patterns": ["结构化简历", "候选人画像"]}, {"id": "template", "patterns": ["岗位模板", "岗位匹配"]}]},
+        {"id": "completeness", "name": "输出完整性", "max_points": 4, "checks": [{"id": "recommendation", "patterns": ["推荐岗位"]}, {"id": "gap", "patterns": ["能力差距"]}, {"id": "reason", "patterns": ["匹配理由", "学习建议"]}]},
+        {"id": "reasoning", "name": "链路价值", "max_points": 2, "checks": [{"id": "connection", "patterns": ["连接简历解析和后续专项面试", "简历解析和后续专项面试", "简历解析和专项面试"]}]}
+      ],
+      "veto_patterns": ["岗位推荐准确率达到100%", "所有用户都匹配成功"]
+    }
+  },
+  {
+    "case_id": "position_agent_irrelevant",
+    "question": "岗位匹配 Agent 相比让用户手动选择岗位，多解决了什么问题？",
+    "reference_answer": "岗位匹配 Agent 读取结构化简历，构建候选人画像，再与岗位模板匹配，输出推荐岗位、匹配理由、能力差距和学习建议。",
+    "key_points": ["读取结构化简历", "匹配岗位模板", "推荐理由和能力差距"],
+    "candidate_answer": "系统使用 PostgreSQL 保存用户数据，并用 Redis 做缓存，还通过 Docker Compose 部署。",
+    "expected": {"score_range": [0, 2], "veto": false},
+    "rubric": {
+      "dimensions": [
+        {"id": "correctness", "name": "问题针对性", "max_points": 5, "checks": [{"id": "resume", "patterns": ["简历", "候选人画像"]}, {"id": "position", "patterns": ["岗位匹配", "岗位模板"]}]},
+        {"id": "completeness", "name": "输出完整性", "max_points": 3, "checks": [{"id": "recommendation", "patterns": ["推荐岗位"]}, {"id": "gap", "patterns": ["能力差距"]}]},
+        {"id": "reasoning", "name": "链路价值", "max_points": 2, "checks": [{"id": "connection", "patterns": ["面试"]}]}
+      ],
+      "veto_patterns": []
+    }
+  }
+]

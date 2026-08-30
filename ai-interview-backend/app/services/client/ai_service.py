@@ -92,6 +92,30 @@ class AIService:
         raise ValueError(f"无法从模型输出中提取 JSON: {text[:300]}")
 
     @staticmethod
+    def _normalise_evaluation(result: dict) -> dict:
+        """Enforce the score/veto contract at the service boundary."""
+        if not isinstance(result, dict):
+            raise ValueError("评分结果必须是 JSON 对象")
+
+        try:
+            score = float(result.get("score", 0))
+        except (TypeError, ValueError):
+            score = 0.0
+        score = max(0.0, min(10.0, score))
+
+        veto_value = result.get("veto", False)
+        if isinstance(veto_value, str):
+            veto = veto_value.strip().lower() in {"true", "1", "yes", "是"}
+        else:
+            veto = bool(veto_value)
+
+        # A veto is a hard safety contract, even if the model forgot to zero
+        # the score in its JSON response.
+        result["score"] = 0.0 if veto else round(score, 1)
+        result["veto"] = veto
+        return result
+
+    @staticmethod
     async def parse_resume(resume_text: str) -> dict:
         """解析简历文本，提取结构化信息（姓名、学历、技能、经历等）"""
         messages = [
@@ -257,13 +281,20 @@ class AIService:
                     + ("评分时请对照【参考答案要点】，候选人答中要点越多分越高。\n" if ref_block else "")
                     + "请返回纯JSON格式（不要markdown代码块）：\n"
                     '{"score": 7.5, "feedback": "简短反馈50字以内", '
-                    '"follow_up": false}\n'
+                    '"follow_up": false, "veto": false}\n'
                     "评分标准：\n"
                     "- 9-10: 回答非常出色，有深度有见解\n"
                     "- 7-8: 回答良好，基本正确\n"
                     "- 5-6: 回答一般，有明显不足\n"
                     "- 3-4: 回答较差，理解有误\n"
-                    "- 1-2: 基本没有回答到点上"
+                    "- 1-2: 基本没有回答到点上\n"
+                    "当存在【关键采分点】时，分数必须按覆盖率校准：所有关键点都覆盖且没有事实错误必须为 9-10 分，"
+                    "只缺一个次要点或解释略简略为 8 分，覆盖大多数为 7-8 分，覆盖一部分为 5-6 分，"
+                    "只覆盖少数或答非所问为 1-4 分；不要把额外文采、篇幅或没有依据的细节当成加分项，"
+                    "也不要把完整正确的回答压在 8 分以下。\n"
+                    "否决规则（veto）：如果候选人编造题目、简历或参考答案中没有的事实，"
+                    "尤其是线上准确率、用户数量、QPS、性能提升等项目成果，必须将 veto 设为 true，"
+                    "score 设为 0。不能因为回答流畅或其他部分正确而豁免。没有依据的具体数字一律按幻觉处理。"
                 )
             },
             {
@@ -279,7 +310,7 @@ class AIService:
             }
         ]
         result = await AIService._chat(messages, temperature=0.5)
-        return AIService._extract_json(result)
+        return AIService._normalise_evaluation(AIService._extract_json(result))
 
     @staticmethod
     async def evaluate_answer_stream(
@@ -311,7 +342,10 @@ class AIService:
                     + "请先用自然语言给出详细点评（100字左右），然后换行输出评分JSON。\n"
                     "格式要求：\n"
                     "先输出点评文字，然后另起一行输出：\n"
-                    '```json\n{"score": 7.5}\n```'
+                    '```json\n{"score": 7.5, "veto": false}\n```\n'
+                    "如果候选人编造题目、简历或参考答案中没有的事实，尤其是线上准确率、"
+                    "用户数量、QPS、性能提升等项目成果，必须将 veto 设为 true，并将 score 设为 0。"
+                    "没有依据的具体数字一律按幻觉处理。"
                 )
             },
             {
