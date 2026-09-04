@@ -26,7 +26,7 @@ def _build_retrieval_query(target_position: str, parsed_resume: dict) -> str:
         top_skills = str(skills)[:200]
     return f"{target_position} {top_skills}".strip()
 
-
+ 
 class InterviewService:
 
     @staticmethod

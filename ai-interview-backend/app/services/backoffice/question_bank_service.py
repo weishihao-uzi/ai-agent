@@ -14,7 +14,7 @@ def _build_embedding_text(question: str, reference_answer: str | None) -> str:
     if reference_answer and reference_answer.strip():
         parts.append(f"参考答案：{reference_answer.strip()}")
     return "\n\n".join(parts)
-
+  
 
 class QuestionBankService:
 
@@ -162,11 +162,12 @@ class QuestionBankService:
 
                 texts = [_build_embedding_text(q.question, q.reference_answer) for q in rows]
                 embeddings = await embed_texts(texts)  # async batch
-
+                if not (len(rows) == len(embeddings) == len(texts)):
+                    raise ValueError(f"长度不一致: rows={len(rows)}, embeddings={len(embeddings)}, texts={len(texts)}")
                 for q, emb, txt in zip(rows, embeddings, texts):
                     q.embedding = emb
                     q.embedding_text = txt
-
+                
                 await db.commit()
                 return len(rows)
 

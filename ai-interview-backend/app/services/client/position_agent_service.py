@@ -106,6 +106,7 @@ _prompt = ChatPromptTemplate.from_messages([
 ])
 
 
+
 # ── 全局 Agent 实例（懒加载）────────────────────────────────────────────
 
 _agent_executor: AgentExecutor | None = None
@@ -194,6 +195,7 @@ class PositionAgentService:
                     "output_preview": str(observation)[:200],
                 })
             except Exception:
+                logger.warning(f"处理 Agent 中间步骤失败: {e}")
                 continue
 
         return {

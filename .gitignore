@@ -32,3 +32,8 @@ eval/live_*.json
 eval/*baseline*.json
 eval/rag_pgvector*.json
 .venv-rag*/
+
+# Runtime artifacts & nested external repo
+ai-interview-backend/uploads/
+outputs/
+ai-agent-book/

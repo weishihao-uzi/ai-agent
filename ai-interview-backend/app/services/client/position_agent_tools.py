@@ -122,6 +122,7 @@ async def build_candidate_profile(parsed_resume: dict) -> dict:
 
 def _calculate_match_score(profile: dict, template: PositionTemplate) -> tuple[float, list, list]:
     """
+    基于关键词的模糊匹配
     计算候选人画像与岗位模板的匹配度。
     返回 (score, matched_skills, missing_skills)
     """
@@ -184,6 +185,7 @@ async def match_positions(candidate_profile: dict, top_n: int = 3) -> dict:
 
     scored = []
     for t in templates:
+        #templates是模板
         score, matched, missing = _calculate_match_score(candidate_profile, t)
         scored.append((t, score, matched, missing))
 

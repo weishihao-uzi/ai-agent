@@ -367,7 +367,7 @@ async def retrieve_chunks(query, db, k=4, category=None, min_score=0.3):
             KnowledgeDocument.is_active == True,
             KnowledgeChunk.embedding.cosine_distance(query_vec) <= distance_threshold,
         )
-        .order_by(KnowledgeChunk.embedding.cosine_distance(query_vec))
+         .order_by(KnowledgeChunk.embedding.cosine_distance(query_vec))
         .limit(k)
     )
 ```

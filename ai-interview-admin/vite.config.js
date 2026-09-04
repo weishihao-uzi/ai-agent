@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         // TODO: 改成你自己 VM 的 IP 地址
-        target: '',
+        target: 'http://192.168.106.100:8006',
         changeOrigin: true
       }
     }
