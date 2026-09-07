@@ -9,33 +9,15 @@
 """
 import json
 import logging
-from langchain_openai import ChatOpenAI
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain_core.prompts import ChatPromptTemplate
 
-from app.core.config import settings
+from app.schemas.client.position_agent import MatchResult
 from app.services.client.ai_service import AIService
+from app.services.client.llm import get_llm
 from app.services.client.position_agent_tools import POSITION_AGENT_TOOLS
 
 logger = logging.getLogger(__name__)
-
-
-# ── LLM 配置 ────────────────────────────────────────────────────────────
-
-_llm: ChatOpenAI | None = None
-
-def get_llm() -> ChatOpenAI:
-    """单例 ChatOpenAI 实例（包装 DeepSeek）"""
-    global _llm
-    if _llm is None:
-        _llm = ChatOpenAI(
-            model=settings.DEEPSEEK_MODEL,
-            api_key=settings.DEEPSEEK_API_KEY,
-            base_url=settings.DEEPSEEK_BASE_URL,
-            temperature=0.3,
-            timeout=120,
-        )
-    return _llm
 
 
 # ── 系统 Prompt ─────────────────────────────────────────────────────────
@@ -136,6 +118,39 @@ def get_agent_executor() -> AgentExecutor:
 class PositionAgentService:
 
     @staticmethod
+    async def _parse_final_output(raw_output: str) -> dict:
+        """
+        最终输出的三层处理：解析 → MatchResult 校验 → 失败时一次性重排版修复。
+
+        MatchResult 是输出契约的单一事实源：此处校验、重排版调用的 schema 共用一份定义。
+        """
+        try:
+            data = AIService._extract_json(raw_output)
+            MatchResult.model_validate(data)
+            return data
+        except Exception:
+            pass
+
+        # 内容缺失（连 { 都没有，如 iteration-limit 的固定文案）→ 重排版必败，直接 failed
+        if "{" not in raw_output:
+            logger.warning("[PositionAgent] 最终输出不含 JSON 内容，跳过重排版")
+            return {"error": "Agent 最终输出格式异常", "raw_output": raw_output[:1000]}
+
+        try:
+            repair_llm = get_llm().with_structured_output(MatchResult)
+            repaired = await repair_llm.ainvoke(
+                "将以下 Agent 输出整理为 JSON 结构化结果，不得新增、不得改写事实信息：\n"
+                + raw_output
+            )
+            result = repaired.model_dump()
+            result["repaired"] = True
+            logger.info("[PositionAgent] 最终输出经重排版修复（repaired=True）")
+            return result
+        except Exception as e:
+            logger.error(f"[PositionAgent] 重排版修复失败: {e}")
+            return {"error": "Agent 最终输出格式异常", "raw_output": raw_output[:1000]}
+
+    @staticmethod
     async def run_agent(
         resume_id: int,
         target_direction: str | None = None,
@@ -172,15 +187,8 @@ class PositionAgentService:
         raw_output = response.get("output", "")
         logger.info(f"[PositionAgent] 完成，raw_output 长度: {len(raw_output)}")
 
-        # 解析最终 JSON
-        try:
-            result = AIService._extract_json(raw_output)
-        except Exception as e:
-            logger.error(f"[PositionAgent] 输出 JSON 解析失败: {e}, raw: {raw_output[:300]}")
-            result = {
-                "error": "Agent 最终输出格式异常",
-                "raw_output": raw_output[:1000],
-            }
+        # 解析最终输出：解析 → schema 校验 → 失败时一次性重排版（见 _parse_final_output）
+        result = await self._parse_final_output(raw_output)
 
         # 摘要中间步骤（不返回完整工具调用结果，避免响应过大）
         steps_summary = []

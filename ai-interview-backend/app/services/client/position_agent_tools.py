@@ -21,7 +21,8 @@ from sqlalchemy import select
 from app.db.base import get_session_local
 from app.models.resume import Resume
 from app.models.position_template import PositionTemplate
-from app.services.client.ai_service import AIService
+from app.schemas.client.position_agent import CandidateProfile
+from app.services.client.llm import get_llm
 from app.services.backoffice.position_template_service import PositionTemplateService
 
 logger = logging.getLogger(__name__)
@@ -64,6 +65,29 @@ async def get_parsed_resume(resume_id: int) -> dict:
 
 # ── 工具 2：构建候选人画像 ──────────────────────────────────────────────
 
+# 输出格式由 CandidateProfile schema 保证（with_structured_output 强制模型经 tool_call 输出），
+# 不再走 prompt 文字约定 + 事后 _extract_json。懒加载，复用 get_llm 单例。
+_profile_llm = None
+
+def _get_profile_llm():
+    global _profile_llm
+    if _profile_llm is None:
+        _profile_llm = get_llm().with_structured_output(CandidateProfile)
+    return _profile_llm
+
+
+PROFILE_SYSTEM_PROMPT = """你是一个资深技术面试官 + HR 顾问。请根据候选人结构化简历，提炼成画像信息。
+
+评估标准：
+- 在校学生 / 应届生只有实习经历 → campus
+- 1-3 年经验 → junior
+- 3-5 年经验 → mid
+- 5 年以上 → senior
+
+position_hints 候选值（必须在内）：python_backend / java_backend / vue_frontend / react_frontend / ai_application / fullstack / mobile_android / devops
+
+各字段的含义和约束以参数 schema 的 description 为准。"""
+
 @tool
 async def build_candidate_profile(parsed_resume: dict) -> dict:
     """
@@ -81,41 +105,16 @@ async def build_candidate_profile(parsed_resume: dict) -> dict:
         return {"error": "parsed_resume 为空"}
 
     messages = [
-        {
-            "role": "system",
-            "content": (
-                "你是一个资深技术面试官 + HR 顾问。"
-                "请根据候选人结构化简历，提炼成画像信息。\n"
-                "必须返回纯 JSON 格式（不要 markdown 代码块），包含字段：\n"
-                '{\n'
-                '  "experience_level": "campus / junior / mid / senior",\n'
-                '  "primary_stack": ["核心技术栈，最多 8 个"],\n'
-                '  "secondary_stack": ["次要技术栈"],\n'
-                '  "project_directions": ["项目方向标签，如 电商后端 / AI应用 / 数据分析"],\n'
-                '  "strong_points": ["3 条具体优势"],\n'
-                '  "weak_points": ["3 条具体不足"],\n'
-                '  "position_hints": ["建议匹配的岗位标签，如 python_backend / vue_frontend"]\n'
-                '}\n'
-                "评估标准：\n"
-                "- 在校学生 / 应届生只有实习经历 → campus\n"
-                "- 1-3 年经验 → junior\n"
-                "- 3-5 年经验 → mid\n"
-                "- 5 年以上 → senior\n"
-                "position_hints 候选值（必须在内）：python_backend / java_backend / vue_frontend "
-                "/ react_frontend / ai_application / fullstack / mobile_android / devops"
-            ),
-        },
-        {
-            "role": "user",
-            "content": f"候选人简历：\n{json.dumps(parsed_resume, ensure_ascii=False)}",
-        },
+        {"role": "system", "content": PROFILE_SYSTEM_PROMPT},
+        {"role": "user", "content": f"候选人简历：\n{json.dumps(parsed_resume, ensure_ascii=False)}"},
     ]
-    raw = await AIService._chat(messages, temperature=0.3)
     try:
-        return AIService._extract_json(raw)
+        profile = await _get_profile_llm().ainvoke(messages)
+        return profile.model_dump()
     except Exception as e:
-        logger.error(f"build_candidate_profile JSON 解析失败: {e}, raw: {raw[:200]}")
-        return {"error": "AI 输出解析失败", "raw": raw[:200]}
+        # 错误契约不变：主 Agent 和 match_positions 都靠 error key 感知失败
+        logger.error(f"build_candidate_profile 失败: {e}")
+        return {"error": f"画像生成失败: {str(e)[:150]}"}
 
 
 # ── 工具 3：岗位匹配 ────────────────────────────────────────────────────

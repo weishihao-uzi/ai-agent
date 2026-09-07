@@ -37,3 +37,12 @@ eval/rag_pgvector*.json
 ai-interview-backend/uploads/
 outputs/
 ai-agent-book/
+
+# Local editor backups & agent memory
+*.bak*
+.ai-memory/
+
+# kb-rag rebuildable index artifacts
+kb-rag/kb.bm25.pkl
+kb-rag/kb.dnnd
+kb-rag/kb_rag.log
