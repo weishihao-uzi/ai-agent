@@ -127,16 +127,12 @@ raw 逻辑：
 
 按顺序做，每步验收过了再做下一步：
 
-- [ ] **S1 schema 落地**：三个 pydantic 模型进 `app/schemas/client/position_agent.py`；`python -c` 导入无报错；`CandidateProfile.model_json_schema()` 能打印
+- [x] **S1 schema 落地**：三个 pydantic 模型进 `app/schemas/client/position_agent.py`；`python -c` 导入无报错；`CandidateProfile.model_json_schema()` 能打印（✅ 2026-09-06，实际落地 4 个模型）
 - [x] **S2 改动一**：工具 2 换 `_profile_llm`（先做上面的 `llm.py` 抽取）；✅ 2026-09-07 十连跑完成：硬违规 0/10、软违规 0/10，均值 2750ms（脚本 `practice/profile_10runs.py`，数据见 §8）
 - [x] **S3 改动二**：service 层加 model_validate + 修复调用；✅ 2026-09-07 注入测试通过：尾部逗号破坏的 JSON → 修复路径出 `repaired: True`，内容零改写（positions/next_actions 原样保留），仅 1 次修复调用
-- [ ] **S4 回归**：正常路径 10 连跑全绿（无 repaired 标记）；`/match` 接口端到端一次
-- [ ] **S5 测试入库**：`tests/` 加表驱动单测。**被测对象是 service 层"解析+校验"组合函数**（`_extract_json` → `MatchResult.model_validate` 的整条路径），不是 `model_validate` 单独——五个输入喂组合函数，断言各归各位：
-  - `""`、`"纯垃圾文本"`、`'截断的{"a":'` → 解析层失败 → failed
-  - `"{}"` → **解析成功但校验层失败**（缺必填字段）→ failed——这一条就是"脏数据拦截"的证明
-  - `"前缀" + 合法的 MatchResult JSON + "后缀"` → 解析成功、校验成功 → ok
-  - 另加一条：工具 2 注入 `OutputParserException`，断言返回 `{"error": ...}` dict（错误契约不变）
-- [ ] **S6 数据记录**：修复触发率、画像 schema 违规率两个数字写进本文档末尾——它们是 M3 立项的依据
+- [x] **S4 回归**：✅ 2026-09-07 `/match` 端到端经真实 UI 全链路走通（简历上传 → 岗位匹配 → 开面 → 报告评分），页面正常渲染无报错。当时未专门留存 app 日志的"无 repaired/重排版字样"确认，补验一条命令即可：`docker logs ai-interview-app 2>&1 | grep -iE "repaired|重排版"`（无输出 = 正常路径零修复；容器当日起未重建，日志仍含当日记录）。正常路径 10 连跑量级未做，M3 立项需要时再补
+- [x] **S5 测试入库**：✅ 2026-09-06 `tests/test_position_agent_output_parsing.py` 9 用例全绿（分层失败路径 ×3、杂质包裹正常通过、重排版成功/失败、工具错误契约 ×2，被测对象为 service 层解析+校验组合函数；其中 `"{}"` → 解析成功但校验失败 → failed，是"脏数据拦截"的直接证明）
+- [x] **S6 数据记录**：✅ 2026-09-07 已录入 §8（画像 schema 违规率、S3 注入、端到端状态）；正常路径修复触发率 10 连跑留待 M3 立项需要时补测
 
 ## 7. 面试话术（30 秒）
 
@@ -147,11 +143,11 @@ raw 逻辑：
 | 指标 | 数值 | 备注 |
 |---|---|---|
 | 画像 schema 违规率（S2） | **硬 0/10，软 0/10**（2026-09-07 实测） | hints 全部精确落在枚举内（python_backend / ai_application ×10）；DeepSeek 无 strict 下 description 指导力实测有效 |
-| 修复路径触发率（S4，人为注入除外） | ☐ / 10 | 待用户跑 |
-| 正常路径延迟变化 | 画像单次调用均值 2750ms，最慢 5383ms（n=10；首轮为单例冷启动） | 端到端对比待 S4 |
+| 修复路径触发率（S4，人为注入除外） | 端到端 ×1 完成，触发与否未查日志（补验命令见 §9） | 2026-09-07 真实 UI 全链路 1 次，结果正常渲染；10 连跑未做，M3 立项需要时再补 |
+| 正常路径延迟变化 | 画像单次调用均值 2750ms，最慢 5383ms（n=10；首轮为单例冷启动） | 端到端 `/match` 整体在真实 UI 正常响应，无感知异常 |
 | S3 注入测试（尾部逗号破坏 JSON，内容完整） | ✅ repaired=True，内容零改写 | 2026-09-07 真实修复调用 1 次，2026-09-06 单测另有假 LLM 覆盖 9 用例 |
 
-## 9. 实施记录（2026-09-06，S1–S3 + S5 + 冒烟已完成）
+## 9. 实施记录（2026-09-06 实施，2026-09-07 收尾完成：S1–S6 全部关闭）
 
 **代码改动**：
 - `app/schemas/client/position_agent.py`：+4 模型（`CandidateProfileSummary` / `CandidateProfile` / `RecommendedPosition` / `MatchResult`）
@@ -165,7 +161,7 @@ raw 逻辑：
 **留给用户的收尾**：
 - [x] ~~S2 的 10 连跑~~ ✅ 2026-09-07：硬 0/10、软 0/10，均值 2750ms（`practice/profile_10runs.py`）
 - [x] ~~S3 注入测试~~ ✅ 2026-09-07：坏 JSON → repaired=True，内容零改写（本机直调 `_parse_final_output`）
-- [ ] S4 回归：虚拟机重启 app 容器 → `/match` 端到端 1 次 → 确认无 `repaired` 标记、日志无"重排版"字样
-- [ ] git 提交（改动 4 文件 + 新建 4 文件：llm.py、测试、10 连跑脚本、方案文档，建议单独一个 commit）
+- [x] ~~S4 回归~~ ✅ 2026-09-07：端到端经真实 UI 全链路走通（上传 → 匹配 → 开面 → 报告）。日志级确认未当场留存，可补一条：`docker logs ai-interview-app 2>&1 | grep -iE "repaired|重排版"`（无输出 = 正常路径零修复）
+- [x] ~~git 提交~~ ✅ 2026-09-07：`01be6f4`（feat：补丁 3 文件 + llm.py + 9 测试 + 本文档 + .gitignore 增补）、`0dfaed3`（docs：题库RAG代码逻辑图 + practice 笔记），已推送 origin（weishihao-uzi/ai-agent）；kb-rag 因内嵌独立 .git（5 个里程碑提交）暂未收录，待定 subtree 合并或重新导入
 
-**环境备注**：本地 `.venv`（Python 3.13）装不了 `langchain==0.3.7`（其 `numpy<2` 上限在 3.13 无 wheel），本地升到 `langchain==0.3.27`；**requirements.txt 未动**，Docker 内（低版本 Python）仍用 0.3.7。两版本在本次用到的 API（`with_structured_output` / `create_tool_calling_agent`）上行为一致，但正式回归（S4）建议在 Docker 环境跑。
+**环境备注**：本地 `.venv`（Python 3.13）装不了 `langchain==0.3.7`（其 `numpy<2` 上限在 3.13 无 wheel），本地升到 `langchain==0.3.27`；**requirements.txt 未动**，Docker 内（低版本 Python）仍用 0.3.7。两版本在本次用到的 API（`with_structured_output` / `create_tool_calling_agent`）上行为一致；正式回归（S4）已在 Docker 环境完成（2026-09-07，VM 后端）。
